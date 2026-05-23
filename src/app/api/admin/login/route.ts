@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
         if (!user) {
             return NextResponse.json(
-                { success: false, error: "គណនីនេះមិនមានក្នុងប្រព័ន្ធទេ!" },
+                { success: false, error: "Your username is incorrect" },
                 { status: 401 }
             );
         }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             return NextResponse.json(
-                { success: false, error: "ពាក្យសម្ងាត់មិនត្រឹមត្រូវទេ!" },
+                { success: false, error: "Your password is incorrect" },
                 { status: 401 }
             );
         }

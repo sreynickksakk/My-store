@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { login } from "@/services/authService"; 
 
 export default function AdminLogin() {
     const [username, setUsername] = useState("");
@@ -16,19 +17,10 @@ export default function AdminLogin() {
         setLoading(true);
 
         try {
-            const res = await fetch("/api/admin/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password }),
-            });
+            const user = await login({ username, password });
+            localStorage.setItem("admin_user", JSON.stringify(user));
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || "Login failed");
-            }
-            alert("Login successful!");
-            router.push("/admin/dashboard");
+            router.push("/admin");
 
         } catch (err: any) {
             setError(err.message);
@@ -76,6 +68,7 @@ export default function AdminLogin() {
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full border p-2.5 rounded text-gray-700 focus:outline-blue-500"
                             placeholder="Enter password"
+                            autoComplete="current-password"
                             required
                             disabled={loading}
                         />

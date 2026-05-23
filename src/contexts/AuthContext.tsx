@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { login as loginService, logout as logoutService } from "@/services/authService"; 
 
 type Permission = string;
 
@@ -22,13 +23,10 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const router = useRouter();
 
-    
     useEffect(() => {
         const stored = localStorage.getItem("admin_user");
         if (stored) {
@@ -40,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }, []);
 
-    
     useEffect(() => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === "admin_user" && !e.newValue) {
@@ -53,23 +50,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const login = async (username: string, password: string) => {
-        const res = await fetch("/api/admin/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-        });
+        const userData = await loginService({ username, password });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-
-        // រក្សា user ក្នុង localStorage
-        localStorage.setItem("admin_user", JSON.stringify(data.user));
-        setUser(data.user);
-        router.push("/admin/dashboard"); 
+        localStorage.setItem("admin_user", JSON.stringify(userData));
+        setUser(userData);
+        router.push("/admin");
     };
 
     const logout = async () => {
-        await fetch("/api/admin/logout", { method: "POST" });
+        await logoutService();
+
         localStorage.removeItem("admin_user");
         setUser(null);
         router.replace("/admin/login");
@@ -80,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (user.role === "SUPER_ADMIN") return true;
         return user.permissions.includes(permission);
     };
-
 
     return (
         <AuthContext.Provider value={{ user, login, logout, hasPermission }}>
